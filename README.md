@@ -1,3 +1,4 @@
+#Instructions
 Build a web application to allow adding a pet, adding a vet, scheduling an appointment for a pet, 
 and displaying a list of appointments for a pet or a vet.
  
@@ -18,3 +19,6 @@ Regular implicit non-functional characteristics of any production grade applicat
  
 Don’t expect any code or live demo for these.
 But we want to see your definition for these , your design , choice of technologies , proposals to accomplish the same.
+
+# Craft Document
+https://docs.google.com/document/d/1iU_TupC5SYld9UnCKHT4HcytedRvKSWBu-zmm4IVz6k
