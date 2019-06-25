@@ -1,6 +1,5 @@
 package craft.app.entity.appointment;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,13 +19,18 @@ public class Appointment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer       id;
-    private ZonedDateTime start;
-    private ZonedDateTime end;
+    private Integer id;
 
-    @Column(name = "pet_id")
+    @Column(nullable = false) private ZonedDateTime start;
+    @Column(nullable = false) private ZonedDateTime end;
+    @Column(nullable = false) private Boolean       deleted   = false;
+    @Column(nullable = false) private Boolean       running   = false;
+    @Column(nullable = false) private Boolean       completed = false;
+    @Column(nullable = false) private Boolean       scheduled = false;
+
+    @Column(name = "pet_id", nullable = false)
     private Integer petId;
 
-    @Column(name = "vet_id")
+    @Column(name = "vet_id", nullable = false)
     private Integer vetId;
 }

@@ -4,29 +4,33 @@ USE craft;
 
 CREATE TABLE appointment (
     id INTEGER NOT NULL AUTO_INCREMENT,
-    end DATETIME,
-    start DATETIME,
-    pet_id INTEGER,
-    vet_id INTEGER,
+    end DATETIME NOT NULL,
+    start DATETIME NOT NULL,
+    pet_id INTEGER NOT NULL,
+    vet_id INTEGER NOT NULL,
+    completed BIT  NOT NULL DEFAULT 0,
+    deleted BIT  NOT NULL DEFAULT 0,
+    running BIT  NOT NULL DEFAULT 0,
+    scheduled BIT  NOT NULL DEFAULT 0,
     PRIMARY KEY (id)
 ) ENGINE=INNODB;
 
 CREATE TABLE pet (
     id INTEGER NOT NULL AUTO_INCREMENT,
-    name VARCHAR(255),
-    owner_email_id VARCHAR(255),
-    owner_first_name VARCHAR(255),
-    owner_last_name VARCHAR(255),
-    owner_phone_no BIGINT,
+    name VARCHAR(255) NOT NULL,
+    owner_email_id VARCHAR(255) NOT NULL,
+    owner_first_name VARCHAR(255) NOT NULL,
+    owner_last_name VARCHAR(255) NOT NULL,
+    owner_phone_no BIGINT NOT NULL,
     PRIMARY KEY (id)
 ) engine=InnoDB;
 
 CREATE TABLE vet (
     id INTEGER NOT NULL AUTO_INCREMENT,
-    email_id VARCHAR(255),
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    phone_no BIGINT,
+    email_id VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    phone_no BIGINT NOT NULL,
     PRIMARY KEY (id)
 ) ENGINE=INNODB;
 

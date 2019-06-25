@@ -10,6 +10,7 @@ import craft.app.entity.pet.repo.PetRepository;
 import craft.app.entity.vet.Vet;
 import craft.app.entity.vet.repo.VetRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
 import javax.annotation.PostConstruct;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -39,6 +41,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
         path = "/api/v1/appointment",
         produces = {APPLICATION_JSON_VALUE}
 )
+@Slf4j
 @AllArgsConstructor
 public class AppointmentController {
 
@@ -54,22 +57,22 @@ public class AppointmentController {
         initializeDaliyIntervalSearchTrees();
     }
 
-    @Scheduled(cron = "0 0 * * * *")
+    /**
+     * Scheduled job to repopulate the IntervalSearchTrees
+     */
+    //@Scheduled(cron = "0 0/1 * 1/1 * ? *")
+    @Scheduled(fixedDelay = 60000)
     private void initializeDaliyIntervalSearchTrees() {
-        ZoneId zoneId = ZoneId.of("+00:00");
-        ZonedDateTime startDate = ZonedDateTime.from(Instant.now()
-                                                            .atZone(zoneId)
-                                                            .truncatedTo(ChronoUnit.DAYS))
-                                               .minusDays(1L);
-        ZonedDateTime    endDate         = startDate.plusDays(30L);
-        Set<Appointment> allAppointments = appointmentRepository.findAllByStartBetweenOrderByIdAsc(startDate, endDate);
-        allAppointments.stream()
-                       .forEach(appointment -> {
-                           ZonedDateTime appointmentStartDate = appointment.getStart();
-                           ZonedDateTime appointmentEndDate   = appointment.getEnd();
+        Set<Appointment> allAppointments = appointmentRepository.findAllByScheduledAndCompletedOrderByIdAsc(true,
+                                                                                                            false);
+        allAppointments.forEach(appointment -> {
+            Integer       vetId                = appointment.getVetId();
+            ZonedDateTime appointmentStartDate = appointment.getStart();
+            ZonedDateTime appointmentEndDate   = appointment.getEnd();
 
-                           updateIntervalSearchTree(appointmentStartDate, appointmentEndDate);
-                       });
+            updateIntervalSearchTree(vetId, appointmentStartDate, appointmentEndDate);
+        });
+        log.info("dailyAppointmentTreeMap refreshed : {}", dailyAppointmentTreeMap);
     }
 
     @GetMapping
@@ -88,7 +91,7 @@ public class AppointmentController {
                                                             .atZone(zoneId)
                                                             .truncatedTo(ChronoUnit.DAYS));
         ZonedDateTime endDate = startDate.plusHours(24);
-        return appointmentDetailsRepository.findAllByStartBetweenOrderByIdAsc(startDate, endDate);
+        return appointmentDetailsRepository.findAllByScheduledAndStartBetweenOrderByIdAsc(true, startDate, endDate);
     }
 
     @GetMapping(value = "{id}")
@@ -106,14 +109,16 @@ public class AppointmentController {
         ZonedDateTime appointmentStart = appointment.getStart();
         ZonedDateTime appointmentEnd   = appointment.getEnd();
 
+        validateVet(appointment);
+        validatePet(appointment);
+        Integer vetId = appointment.getVetId();
+
         Appointment savedAppointment = null;
-        if (isValidateAppointmentSlot(appointmentStart, appointmentEnd)) {
+        if (isValidateAppointmentSlot(vetId, appointmentStart, appointmentEnd)) {
 
-            validateVet(appointment);
-            validatePet(appointment);
-
+            appointment.setScheduled(true);
             savedAppointment = appointmentRepository.save(appointment);
-            updateIntervalSearchTree(appointmentStart, appointmentEnd);
+            updateIntervalSearchTree(vetId, appointmentStart, appointmentEnd);
         }
 
         return appointmentDetailsRepository.findById(savedAppointment.getId())
@@ -144,37 +149,54 @@ public class AppointmentController {
         }
     }
 
-    private boolean isValidateAppointmentSlot(ZonedDateTime appointmentStart, ZonedDateTime appointmentEnd) {
+    private boolean isValidateAppointmentSlot(Integer vetId, ZonedDateTime appointmentStart, ZonedDateTime appointmentEnd) {
         Duration requestedAppointmentDuration = Duration.between(appointmentStart, appointmentEnd);
-        Duration appointmentDuration          = Duration.ofMinutes(60L);
 
-        long diffBetweenNowAndStart = Duration.between(ZonedDateTime.now(), appointmentStart)
-                                              .get(ChronoUnit.SECONDS);
-        if (diffBetweenNowAndStart > (720 * 60 * 60)) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bookings till 30 days in the future is allowed.");
-        }
+        validateAppointmentHourOfDay(appointmentStart);
+        validateAppointmentDayOfWeek(appointmentStart);
+        validateAppointmentOverlap(vetId, appointmentStart, appointmentEnd);
 
-        if (!requestedAppointmentDuration.equals(appointmentDuration)) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Requested duration does not match the allowed duration of 60 minutes.");
-        }
-
-        IntervalSearchTree intervalSearchTree = getIntervalSearchTree(appointmentStart);
-        if (intervalSearchTree.overlap(appointmentStart.getLong(ChronoField.INSTANT_SECONDS), appointmentEnd.getLong(ChronoField.INSTANT_SECONDS))) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Overlap detected for the requested appointment slot");
-        }
-
+        validateAppointmentDuration(requestedAppointmentDuration);
         return true;
     }
 
-    private void updateIntervalSearchTree(ZonedDateTime appointmentStart, ZonedDateTime appointmentEnd) {
-        IntervalSearchTree intervalSearchTree    = getIntervalSearchTree(appointmentStart);
-        String             appointmentTreeMapKey = getAppointmentTreeMapKey(appointmentStart);
+    private void validateAppointmentHourOfDay(ZonedDateTime appointmentStart) {
+        int hourOfDay = appointmentStart.getHour();
+        if (hourOfDay < 8 || hourOfDay > 17) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bookings are allowed only between 8am to 5pm.");
+        }
+    }
+
+    private void validateAppointmentDayOfWeek(ZonedDateTime appointmentStart) {
+        DayOfWeek dayOfWeek = appointmentStart.getDayOfWeek();
+        if (dayOfWeek.equals(DayOfWeek.SATURDAY) || dayOfWeek.equals(DayOfWeek.SUNDAY)) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bookings on SATURDAY oor SUNDAY is not allowed.");
+        }
+    }
+
+    private void validateAppointmentOverlap(Integer vetId, ZonedDateTime appointmentStart, ZonedDateTime appointmentEnd) {
+        IntervalSearchTree intervalSearchTree = getIntervalSearchTree(vetId, appointmentStart);
+        if (intervalSearchTree.overlap(appointmentStart.getLong(ChronoField.INSTANT_SECONDS), appointmentEnd.getLong(ChronoField.INSTANT_SECONDS))) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Overlap detected for the requested appointment slot");
+        }
+    }
+
+    private void validateAppointmentDuration(Duration requestedAppointmentDuration) {
+        Duration appointmentDuration = Duration.ofMinutes(60L);
+        if (!requestedAppointmentDuration.equals(appointmentDuration)) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Requested duration does not match the allowed duration of 60 minutes.");
+        }
+    }
+
+    private void updateIntervalSearchTree(Integer vetId, ZonedDateTime appointmentStart, ZonedDateTime appointmentEnd) {
+        IntervalSearchTree intervalSearchTree    = getIntervalSearchTree(vetId, appointmentStart);
+        String             appointmentTreeMapKey = getAppointmentTreeMapKey(vetId, appointmentStart);
         intervalSearchTree.add(appointmentStart.getLong(ChronoField.INSTANT_SECONDS), appointmentEnd.getLong(ChronoField.INSTANT_SECONDS));
         dailyAppointmentTreeMap.put(appointmentTreeMapKey, intervalSearchTree);
     }
 
-    private IntervalSearchTree getIntervalSearchTree(ZonedDateTime appointmentStart) {
-        String             appointmentTreeMapKey = getAppointmentTreeMapKey(appointmentStart);
+    private IntervalSearchTree getIntervalSearchTree(Integer vetId, ZonedDateTime appointmentStart) {
+        String             appointmentTreeMapKey = getAppointmentTreeMapKey(vetId, appointmentStart);
         IntervalSearchTree intervalSearchTree    = dailyAppointmentTreeMap.get(appointmentTreeMapKey);
         if (intervalSearchTree == null) {
             intervalSearchTree = new IntervalSearchTree();
@@ -182,11 +204,11 @@ public class AppointmentController {
         return intervalSearchTree;
     }
 
-    private String getAppointmentTreeMapKey(ZonedDateTime appointmentStart) {
+    private String getAppointmentTreeMapKey(Integer vetId, ZonedDateTime appointmentStart) {
         int requestedDay = appointmentStart.getDayOfMonth();
         int requestedMonth = appointmentStart.getMonth()
                                              .getValue();
         int requestedYear = appointmentStart.getYear();
-        return requestedYear + "-" + requestedMonth + "-" + requestedDay;
+        return vetId + "-" + requestedYear + "-" + requestedMonth + "-" + requestedDay;
     }
 }

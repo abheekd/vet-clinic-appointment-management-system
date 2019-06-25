@@ -10,5 +10,5 @@ public interface AppointmentDetailsRepository extends CrudRepository<Appointment
 
     public Set<AppointmentDetails> findAllByOrderByIdAsc();
 
-    public Set<AppointmentDetails> findAllByStartBetweenOrderByIdAsc(ZonedDateTime startDate, ZonedDateTime endDate);
+    public Set<AppointmentDetails> findAllByScheduledAndStartBetweenOrderByIdAsc(Boolean scheduled, ZonedDateTime startDate, ZonedDateTime endDate);
 }

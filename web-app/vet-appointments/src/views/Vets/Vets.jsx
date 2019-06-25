@@ -119,7 +119,7 @@ class Vets extends React.Component {
                        vet.emailId];
         let allVets = [ vetData ];
 
-        this.state.registeredVets.map(vet => allVets.push(vet));
+        this.state.registeredVets.forEach(vet => allVets.push(vet));
         this.setState({
           registeredVets: allVets
         });

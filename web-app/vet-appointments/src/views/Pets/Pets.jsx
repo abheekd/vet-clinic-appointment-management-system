@@ -130,7 +130,7 @@ class Pets extends React.Component {
                        pet.ownerEmailId];
         let allPets = [ petData ];
 
-        this.state.registeredPets.map(pet => allPets.push(pet));
+        this.state.registeredPets.forEach(pet => allPets.push(pet));
         this.setState({
           registeredPets: allPets
         });

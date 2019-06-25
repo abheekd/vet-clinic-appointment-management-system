@@ -13,7 +13,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.time.ZonedDateTime;
@@ -26,19 +25,26 @@ public class AppointmentDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer       id;
+    private Integer id;
 
+    @Column(nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
     private ZonedDateTime start;
 
+    @Column(nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
     private ZonedDateTime end;
 
+    @Column(nullable = false) private Boolean deleted   = false;
+    @Column(nullable = false) private Boolean running   = false;
+    @Column(nullable = false) private Boolean completed = false;
+    @Column(nullable = false) private Boolean scheduled = false;
+
     @OneToOne
-    @JoinColumn(name = "pet_id", foreignKey = @ForeignKey(name = "FK_APPOINTMENT_PET_ID"))
+    @JoinColumn(name = "pet_id", foreignKey = @ForeignKey(name = "FK_APPOINTMENT_PET_ID"), nullable = false)
     private Pet pet;
 
     @OneToOne
-    @JoinColumn(name = "vet_id", foreignKey = @ForeignKey(name = "FK_APPOINTMENT_VET_ID"))
+    @JoinColumn(name = "vet_id", foreignKey = @ForeignKey(name = "FK_APPOINTMENT_VET_ID"), nullable = false)
     private Vet vet;
 }

@@ -4,6 +4,7 @@ import craft.app.entity.appointment.Appointment;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
@@ -24,12 +25,13 @@ public class VetDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private String  firstName;
-    private String  lastName;
-    private Long    phoneNo;
-    private String  emailId;
+
+    @Column(nullable = false) private String firstName;
+    @Column(nullable = false) private String lastName;
+    @Column(nullable = false) private Long   phoneNo;
+    @Column(nullable = false) private String emailId;
 
     @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vet_id", foreignKey = @ForeignKey(name = "FK_APPOINTMENT_VET_ID"))
+    @JoinColumn(name = "vet_id", foreignKey = @ForeignKey(name = "FK_APPOINTMENT_VET_ID"), insertable = false, updatable = false, nullable = false)
     private List<Appointment> appointments;
 }
