@@ -21,6 +21,7 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(nullable = false) private String        timeZone;
     @Column(nullable = false) private ZonedDateTime start;
     @Column(nullable = false) private ZonedDateTime end;
     @Column(nullable = false) private Boolean       deleted   = false;

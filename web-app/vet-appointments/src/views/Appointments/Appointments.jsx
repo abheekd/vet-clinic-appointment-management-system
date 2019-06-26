@@ -12,8 +12,8 @@ import GridItem from "components/Grid/GridItem.jsx";
 import GridContainer from "components/Grid/GridContainer.jsx";
 
 import BookAppointment from "views/Appointments/BookAppointment.jsx";
-import {getData, postData} from "utility/API.jsx";
-import {processAppointments} from "utility/AppointmentUtil.jsx";
+import { getData } from "utility/API.jsx";
+import { processAppointments } from "utility/AppointmentUtil.jsx";
 
 const styles = {
   cardCategoryWhite: {
@@ -33,9 +33,9 @@ const styles = {
     textDecoration: "none"
   },
   textField: {
-    width: 200,
+    width: 200
   }
-}
+};
 
 class Appointments extends React.Component {
   constructor(props) {
@@ -45,44 +45,48 @@ class Appointments extends React.Component {
       allAppointments: [],
       currentAppointments: []
     };
-
-    this.loadComponent = () => {
-      getData('http://localhost:8080/api/v1/appointment')
-        .then(response => processAppointments(response))
-        .then(allAppointments => {
-          this.setState({
-            allAppointments: allAppointments
-          });
-        });
-
-      getData('http://localhost:8080/api/v1/appointment/current')
-        .then(response => processAppointments(response))
-        .then(currentAppointments => {
-          this.setState({
-            currentAppointments: currentAppointments
-          });
-        });
-    };
   }
 
   componentDidMount() {
     this.loadComponent();
   }
 
+  loadComponent = () => {
+    getData("http://localhost:8080/api/v1/appointment")
+      .then(response => processAppointments(response))
+      .then(allAppointments => {
+        this.setState({
+          allAppointments: allAppointments
+        });
+      })
+      .catch(error => console.error(error));
+
+    getData("http://localhost:8080/api/v1/appointment/current")
+      .then(response => processAppointments(response))
+      .then(currentAppointments => {
+        this.setState({
+          currentAppointments: currentAppointments
+        });
+      })
+      .catch(error => console.error(error));
+  };
+
   render() {
     return (
       <div>
-        <BookAppointment/>
+        <BookAppointment onSuccess={this.loadComponent} />
         <GridContainer>
           <GridItem xs={12} sm={12} md={12}>
             <Card>
               <CardHeader color="primary">
-                <h4 className={this.props.cardTitleWhite}>Today's Appointments</h4>
+                <h4 className={this.props.cardTitleWhite}>
+                  Today's Appointments
+                </h4>
               </CardHeader>
               <CardBody>
                 <Table
                   tableHeaderColor="primary"
-                  tableHead={['#', 'Pet', 'Vet', 'Appointment Slot']}
+                  tableHead={["#", "Pet", "Vet", "Appointment Slot"]}
                   tableData={this.state.currentAppointments}
                 />
               </CardBody>
@@ -98,7 +102,7 @@ class Appointments extends React.Component {
               <CardBody>
                 <Table
                   tableHeaderColor="primary"
-                  tableHead={['#', 'Pet', 'Vet', 'Appointment Slot']}
+                  tableHead={["#", "Pet", "Vet", "Appointment Slot"]}
                   tableData={this.state.allAppointments}
                 />
               </CardBody>

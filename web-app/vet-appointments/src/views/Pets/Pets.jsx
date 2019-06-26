@@ -4,23 +4,24 @@ import PropTypes from "prop-types";
 // @material-ui/core components
 import withStyles from "@material-ui/core/styles/withStyles";
 import Grid from "@material-ui/core/Grid";
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import Button from "@material-ui/core/Button";
+import TextField from "@material-ui/core/TextField";
+import Typography from "@material-ui/core/Typography";
+import ExpansionPanel from "@material-ui/core/ExpansionPanel";
+import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
+import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
 // core components
 import Table from "components/Table/Table.jsx";
 import Card from "components/Card/Card.jsx";
 import CardHeader from "components/Card/CardHeader.jsx";
 import CardBody from "components/Card/CardBody.jsx";
-
 import GridItem from "components/Grid/GridItem.jsx";
 import GridContainer from "components/Grid/GridContainer.jsx";
 
-import SaveIcon from '@material-ui/icons/Save';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import { getData } from "utility/API.jsx";
+
+import SaveIcon from "@material-ui/icons/Save";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
 const styles = {
   cardCategoryWhite: {
@@ -40,9 +41,9 @@ const styles = {
     textDecoration: "none"
   },
   textField: {
-    width: 200,
+    width: 200
   }
-}
+};
 
 class Pets extends React.Component {
   constructor(props) {
@@ -59,111 +60,115 @@ class Pets extends React.Component {
     };
 
     this.expandPanel = (event, expanded) => {
-      if(expanded) {
-          this.setState({registerPetPanelExpanded : true});
+      if (expanded) {
+        this.setState({ registerPetPanelExpanded: true });
       } else {
-        this.setState({registerPetPanelExpanded : false});
+        this.setState({ registerPetPanelExpanded: false });
       }
     };
 
-    this.handlePetName = (event) => {
+    this.handlePetName = event => {
       const userInput = event.target.value;
       this.setState({
         petName: userInput
       });
-    }
+    };
 
-    this.handleOwnerFirstName = (event) => {
+    this.handleOwnerFirstName = event => {
       const userInput = event.target.value;
       this.setState({
-        ownerFirstName : userInput
+        ownerFirstName: userInput
       });
-    }
+    };
 
-    this.handleOwnerLastName = (event) => {
+    this.handleOwnerLastName = event => {
       const userInput = event.target.value;
       this.setState({
-        ownerLastName : userInput
+        ownerLastName: userInput
       });
-    }
+    };
 
-    this.handleOwnerPhoneNo = (event) => {
+    this.handleOwnerPhoneNo = event => {
       const userInput = event.target.value;
       this.setState({
-        ownerPhoneNo : userInput
+        ownerPhoneNo: userInput
       });
-    }
+    };
 
-    this.handleOwnerEmailId = (event) => {
+    this.handleOwnerEmailId = event => {
       const userInput = event.target.value;
       this.setState({
-        ownerEmailId : userInput
+        ownerEmailId: userInput
       });
-    }
+    };
 
-    this.handleSubmit = (event) => {
+    this.handleSubmit = event => {
       event.preventDefault();
 
-      console.log(this.state);
       let requestBody = JSON.stringify({
-          name: this.state.petName,
-          ownerFirstName: this.state.ownerFirstName,
-          ownerLastName: this.state.ownerLastName,
-          ownerPhoneNo: this.state.ownerPhoneNo,
-          ownerEmailId: this.state.ownerEmailId,
+        name: this.state.petName,
+        ownerFirstName: this.state.ownerFirstName,
+        ownerLastName: this.state.ownerLastName,
+        ownerPhoneNo: this.state.ownerPhoneNo,
+        ownerEmailId: this.state.ownerEmailId
       });
 
       (async () => {
-        const rawResponse = await fetch('http://localhost:8080/api/v1/pet', {
-          method: 'POST',
+        const rawResponse = await fetch("http://localhost:8080/api/v1/pet", {
+          method: "POST",
           headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            Accept: "application/json",
+            "Content-Type": "application/json"
           },
           body: requestBody
         });
         const pet = await rawResponse.json();
-        let petData = [pet.id,
-                       pet.name,
-                       pet.ownerFirstName + " " + pet.ownerLastName,
-                       pet.ownerPhoneNo.toString(),
-                       pet.ownerEmailId];
-        let allPets = [ petData ];
+        let petData = [
+          pet.id,
+          pet.name,
+          pet.ownerFirstName + " " + pet.ownerLastName,
+          pet.ownerPhoneNo.toString(),
+          pet.ownerEmailId
+        ];
+        let allPets = [petData];
 
         this.state.registeredPets.forEach(pet => allPets.push(pet));
         this.setState({
           registeredPets: allPets
         });
       })();
-    }
+    };
   }
 
   componentDidMount() {
-    (async () => {
-      let allPets = await fetch('http://localhost:8080/api/v1/pet')
-        .then(response => response.json())
-        .then(response => {
-          let allPets = [];
-          response.map(pet => allPets.push([
+    getData("http://localhost:8080/api/v1/pet")
+      .then(response => {
+        let allPets = [];
+        response.forEach(pet =>
+          allPets.push([
             pet.id.toString(),
             pet.name,
             pet.ownerFirstName + " " + pet.ownerLastName,
             pet.ownerPhoneNo.toString(),
             pet.ownerEmailId
-          ]));
-          return allPets;
-        });
-
+          ])
+        );
+        return allPets;
+      })
+      .then(allPets => {
         this.setState({
           registeredPets: allPets
         });
-    })();
+      });
   }
 
   render() {
     return (
       <div>
-        <ExpansionPanel expanded={this.state.registerPetPanelExpanded} onChange={this.expandPanel}>
+        <ExpansionPanel
+          expanded={this.state.registerPetPanelExpanded}
+          onChange={this.expandPanel}
+        >
           <ExpansionPanelSummary
             expandIcon={<ExpandMoreIcon />}
             aria-controls="panel1bh-content"
@@ -176,8 +181,8 @@ class Pets extends React.Component {
               noValidate
               autoComplete="off"
               onSubmit={this.handleSubmit}
-              style={{width: '100%', align: 'center'}}
-              >
+              style={{ width: "100%", align: "center" }}
+            >
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <TextField
@@ -191,8 +196,7 @@ class Pets extends React.Component {
                     margin="normal"
                   />
                 </Grid>
-                <Grid item xs={6}>
-                </Grid>
+                <Grid item xs={6}></Grid>
                 <Grid item xs={3}>
                   <TextField
                     required
@@ -241,13 +245,9 @@ class Pets extends React.Component {
                     margin="normal"
                   />
                 </Grid>
-                <Grid item xs={9}>
-                </Grid>
+                <Grid item xs={9}></Grid>
                 <Grid item xs={3}>
-                  <Button
-                    type={'submit'}
-                    variant="contained"
-                    size="medium">
+                  <Button type={"submit"} variant="contained" size="medium">
                     <SaveIcon />
                     Save
                   </Button>
@@ -260,12 +260,14 @@ class Pets extends React.Component {
           <GridItem xs={12} sm={12} md={12}>
             <Card>
               <CardHeader color="primary">
-                <h4 className={this.props.cardTitleWhite}>All Registered Pets</h4>
+                <h4 className={this.props.cardTitleWhite}>
+                  All Registered Pets
+                </h4>
               </CardHeader>
               <CardBody>
                 <Table
                   tableHeaderColor="primary"
-                  tableHead={['#', 'Name', 'Owner', 'Phone#', 'Email ID']}
+                  tableHead={["#", "Name", "Owner", "Phone#", "Email ID"]}
                   tableData={this.state.registeredPets}
                 />
               </CardBody>

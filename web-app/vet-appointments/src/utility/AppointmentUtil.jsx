@@ -1,4 +1,4 @@
-export const processAppointments = (data) => {
+export const processAppointments = data => {
   let appointments = [];
   data.forEach(appointment => {
     let start = new Date(appointment.start);

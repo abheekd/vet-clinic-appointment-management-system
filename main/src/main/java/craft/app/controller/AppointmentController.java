@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
 import javax.annotation.PostConstruct;
-import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -34,6 +33,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static craft.app.utils.ValidatorUtils.validateAppointmentDayOfWeek;
+import static craft.app.utils.ValidatorUtils.validateAppointmentDuration;
+import static craft.app.utils.ValidatorUtils.validateAppointmentHourOfDay;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -107,22 +109,31 @@ public class AppointmentController {
     @PostMapping(consumes = {APPLICATION_JSON_VALUE})
     public AppointmentDetails createAppointment(@RequestBody Appointment appointment) {
         ZonedDateTime appointmentStart = appointment.getStart();
+        appointmentStart = appointmentStart.withZoneSameInstant(ZoneId.of(appointment.getTimeZone()));
+
+
         ZonedDateTime appointmentEnd   = appointment.getEnd();
+        appointmentEnd = appointmentEnd.withZoneSameInstant(ZoneId.of(appointment.getTimeZone()));
 
         validateVet(appointment);
         validatePet(appointment);
         Integer vetId = appointment.getVetId();
 
-        Appointment savedAppointment = null;
+        AppointmentDetails response = null;
         if (isValidateAppointmentSlot(vetId, appointmentStart, appointmentEnd)) {
 
             appointment.setScheduled(true);
-            savedAppointment = appointmentRepository.save(appointment);
-            updateIntervalSearchTree(vetId, appointmentStart, appointmentEnd);
+            Appointment savedAppointment = appointmentRepository.save(appointment);
+
+            Optional<AppointmentDetails> optionalAppointmentDetails = appointmentDetailsRepository.findById(savedAppointment.getId());
+            if (optionalAppointmentDetails.isPresent()) {
+                response = optionalAppointmentDetails.get();
+                updateIntervalSearchTree(vetId, appointmentStart, appointmentEnd);
+            }
+
         }
 
-        return appointmentDetailsRepository.findById(savedAppointment.getId())
-                                           .get();
+        return response;
     }
 
     private void validateVet(Appointment appointment) {
@@ -152,39 +163,20 @@ public class AppointmentController {
     private boolean isValidateAppointmentSlot(Integer vetId, ZonedDateTime appointmentStart, ZonedDateTime appointmentEnd) {
         Duration requestedAppointmentDuration = Duration.between(appointmentStart, appointmentEnd);
 
-        validateAppointmentHourOfDay(appointmentStart);
-        validateAppointmentDayOfWeek(appointmentStart);
-        validateAppointmentOverlap(vetId, appointmentStart, appointmentEnd);
+        boolean isValid = validateAppointmentHourOfDay(appointmentStart, appointmentEnd);
+        isValid = isValid && validateAppointmentDayOfWeek(appointmentStart);
+        isValid = isValid && validateAppointmentOverlap(vetId, appointmentStart, appointmentEnd);
 
-        validateAppointmentDuration(requestedAppointmentDuration);
-        return true;
+        //isValid = isValid && validateAppointmentDuration(requestedAppointmentDuration);
+        return isValid;
     }
 
-    private void validateAppointmentHourOfDay(ZonedDateTime appointmentStart) {
-        int hourOfDay = appointmentStart.getHour();
-        if (hourOfDay < 8 || hourOfDay > 17) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bookings are allowed only between 8am to 5pm.");
-        }
-    }
-
-    private void validateAppointmentDayOfWeek(ZonedDateTime appointmentStart) {
-        DayOfWeek dayOfWeek = appointmentStart.getDayOfWeek();
-        if (dayOfWeek.equals(DayOfWeek.SATURDAY) || dayOfWeek.equals(DayOfWeek.SUNDAY)) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bookings on SATURDAY oor SUNDAY is not allowed.");
-        }
-    }
-
-    private void validateAppointmentOverlap(Integer vetId, ZonedDateTime appointmentStart, ZonedDateTime appointmentEnd) {
+    private boolean validateAppointmentOverlap(Integer vetId, ZonedDateTime appointmentStart, ZonedDateTime appointmentEnd) {
         IntervalSearchTree intervalSearchTree = getIntervalSearchTree(vetId, appointmentStart);
         if (intervalSearchTree.overlap(appointmentStart.getLong(ChronoField.INSTANT_SECONDS), appointmentEnd.getLong(ChronoField.INSTANT_SECONDS))) {
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Overlap detected for the requested appointment slot");
-        }
-    }
-
-    private void validateAppointmentDuration(Duration requestedAppointmentDuration) {
-        Duration appointmentDuration = Duration.ofMinutes(60L);
-        if (!requestedAppointmentDuration.equals(appointmentDuration)) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Requested duration does not match the allowed duration of 60 minutes.");
+        } else {
+            return true;
         }
     }
 

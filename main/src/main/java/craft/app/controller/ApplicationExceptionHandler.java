@@ -14,7 +14,7 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler(HttpClientErrorException.class)
     public ResponseEntity<Object> exception(HttpClientErrorException exception) {
         Map<String, String> responseBody = new HashMap<>();
-        responseBody.put("message", exception.getMessage());
+        responseBody.put("message", exception.getMessage().substring(3));
         return new ResponseEntity<>(responseBody, exception.getStatusCode());
     }
 }

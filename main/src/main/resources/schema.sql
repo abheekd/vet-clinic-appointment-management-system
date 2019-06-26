@@ -4,6 +4,7 @@ USE craft;
 
 CREATE TABLE appointment (
     id INTEGER NOT NULL AUTO_INCREMENT,
+    time_zone VARCHAR(255) NOT NULL,
     end DATETIME NOT NULL,
     start DATETIME NOT NULL,
     pet_id INTEGER NOT NULL,
