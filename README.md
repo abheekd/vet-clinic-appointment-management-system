@@ -1,4 +1,4 @@
-#Instructions
+# Instructions
 Build a web application to allow adding a pet, adding a vet, scheduling an appointment for a pet, 
 and displaying a list of appointments for a pet or a vet.
  
@@ -7,7 +7,8 @@ and displaying a list of appointments for a pet or a vet.
 3. Allow to cancel an appointment
 
 Front-end is an Admin Panel that allows the above functionality
-#
+
+# Clarification
 Regular implicit non-functional characteristics of any production grade application: 
 1. Highly Scalable
 2. Highly Available
