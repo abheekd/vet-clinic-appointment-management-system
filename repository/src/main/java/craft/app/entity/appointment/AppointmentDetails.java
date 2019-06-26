@@ -35,8 +35,7 @@ public class AppointmentDetails {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
     private ZonedDateTime end;
 
-    @Column(nullable = false) private Boolean deleted   = false;
-    @Column(nullable = false) private Boolean running   = false;
+    @Column(nullable = false) private Boolean cancelled = false;
     @Column(nullable = false) private Boolean completed = false;
     @Column(nullable = false) private Boolean scheduled = false;
 

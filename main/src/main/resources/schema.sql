@@ -4,14 +4,13 @@ USE craft;
 
 CREATE TABLE appointment (
     id INTEGER NOT NULL AUTO_INCREMENT,
-    time_zone VARCHAR(255) NOT NULL,
     end DATETIME NOT NULL,
     start DATETIME NOT NULL,
     pet_id INTEGER NOT NULL,
     vet_id INTEGER NOT NULL,
+    time_zone VARCHAR(255) NOT NULL,
+    cancelled BIT  NOT NULL DEFAULT 0,
     completed BIT  NOT NULL DEFAULT 0,
-    deleted BIT  NOT NULL DEFAULT 0,
-    running BIT  NOT NULL DEFAULT 0,
     scheduled BIT  NOT NULL DEFAULT 0,
     PRIMARY KEY (id)
 ) ENGINE=INNODB;

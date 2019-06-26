@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -122,6 +123,8 @@ public class AppointmentController {
         AppointmentDetails response = null;
         if (isValidateAppointmentSlot(vetId, appointmentStart, appointmentEnd)) {
 
+            appointment.setCancelled(false);
+            appointment.setCompleted(false);
             appointment.setScheduled(true);
             Appointment savedAppointment = appointmentRepository.save(appointment);
 
@@ -130,9 +133,30 @@ public class AppointmentController {
                 response = optionalAppointmentDetails.get();
                 updateIntervalSearchTree(vetId, appointmentStart, appointmentEnd);
             }
-
         }
+        return response;
+    }
 
+    @DeleteMapping(value = "{id}")
+    public AppointmentDetails cancelAppointment(@PathVariable("id") Integer id) {
+        Optional<Appointment> optionalAppointments = appointmentRepository.findById(id);
+
+        AppointmentDetails response = null;
+        if (optionalAppointments.isPresent()) {
+            Appointment appointment = optionalAppointments.get();
+
+            appointment.setCancelled(true);
+            appointment.setCompleted(false);
+            appointment.setScheduled(false);
+            appointmentRepository.save(appointment);
+
+            Optional<AppointmentDetails> optionalAppointmentDetails = appointmentDetailsRepository.findById(appointment.getId());
+            if (optionalAppointmentDetails.isPresent()) {
+                response = optionalAppointmentDetails.get();
+
+                initializeDaliyIntervalSearchTrees();
+            }
+        }
         return response;
     }
 

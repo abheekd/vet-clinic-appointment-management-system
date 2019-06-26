@@ -24,8 +24,7 @@ public class Appointment {
     @Column(nullable = false) private String        timeZone;
     @Column(nullable = false) private ZonedDateTime start;
     @Column(nullable = false) private ZonedDateTime end;
-    @Column(nullable = false) private Boolean       deleted   = false;
-    @Column(nullable = false) private Boolean       running   = false;
+    @Column(nullable = false) private Boolean       cancelled = false;
     @Column(nullable = false) private Boolean       completed = false;
     @Column(nullable = false) private Boolean       scheduled = false;
 
