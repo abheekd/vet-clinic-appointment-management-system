@@ -1,16 +1,16 @@
 # Instructions
 Build a web application to allow:
-1. Adding a pet, 
-2. Adding a vet, 
-3. Scheduling an appointment for a pet,
+1. Adding a pet - DONE (FE, BE)
+2. Adding a vet - DONE (FE, BE)
+3. Scheduling an appointment for a pet - DONE (FE, BE)
 4. Cancellation of an appointment,
 4. Displaying a list of appointments for a pet,
 4. Displaying a list of appointments for a vet.
  
 ## Conditions
-1. Two pets cannot schedule for the same vet at the same time.
-2. Vets are available M-F 8am-5pm
-3. Allow to cancel an appointment
+1. Two pets cannot schedule for the same vet at the same time - DONE, Validated
+2. Vets are available M-F 8am-5pm - DONE, Validated
+3. Allow to cancel an appointment - DONE, Validated
 
 Front-end is an Admin Panel that allows the above functionality
 
