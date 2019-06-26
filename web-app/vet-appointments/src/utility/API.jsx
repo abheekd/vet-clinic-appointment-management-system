@@ -12,20 +12,18 @@ export const postData = (url = "", data = {}) => {
   }); // parses JSON response into native JavaScript objects
 };
 
-export const getData = (url = "") => {
+export const getData = async (url = "") => {
   // Default options are marked with *
-  return fetch(url, {
+  const response = await fetch(url, {
     method: "GET"
-  }).then(response => {
-    return response.json();
-  }); // parses JSON response into native JavaScript objects
+  });
+  return response.json(); // parses JSON response into native JavaScript objects
 };
 
-export const deleteData = (url = "") => {
+export const deleteData = async (url = "") => {
   // Default options are marked with *
-  return fetch(url, {
+  const response = await fetch(url, {
     method: "DELETE"
-  }).then(response => {
-    return response.json();
-  }); // parses JSON response into native JavaScript objects
+  });
+  return response.json(); // parses JSON response into native JavaScript objects
 };

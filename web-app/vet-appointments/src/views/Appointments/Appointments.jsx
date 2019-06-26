@@ -12,7 +12,7 @@ import GridItem from "components/Grid/GridItem.jsx";
 import GridContainer from "components/Grid/GridContainer.jsx";
 
 import BookAppointment from "views/Appointments/BookAppointment.jsx";
-import { getData } from "utility/API.jsx";
+import { getData, deleteData } from "utility/API.jsx";
 import { processAppointments } from "utility/AppointmentUtil.jsx";
 
 const styles = {
@@ -62,6 +62,12 @@ class Appointments extends React.Component {
       .catch(error => console.error(error));
   };
 
+  cancelAppointment = id => {
+    deleteData("http://localhost:8080/api/v1/appointment/" + id).then(() =>
+      this.loadComponent()
+    );
+  }
+
   render() {
     return (
       <div>
@@ -74,6 +80,7 @@ class Appointments extends React.Component {
               </CardHeader>
               <CardBody>
                 <Table
+                  onCancel={this.cancelAppointment}
                   tableHeaderColor="primary"
                   tableHead={["#", "Pet", "Vet", "Appointment Slot", "Status"]}
                   tableData={this.state.allAppointments}

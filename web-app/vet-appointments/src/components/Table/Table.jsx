@@ -14,7 +14,7 @@ import tableStyle from "assets/jss/material-dashboard-react/components/tableStyl
 import CloseIcon from "@material-ui/icons/Close";
 
 function CustomTable({ ...props }) {
-  const { classes, tableHead, tableData, tableHeaderColor } = props;
+  const { classes, onCancel, tableHead, tableData, tableHeaderColor } = props;
   return (
     <div className={classes.tableResponsive}>
       <Table className={classes.table}>
@@ -35,26 +35,26 @@ function CustomTable({ ...props }) {
           </TableHead>
         ) : null}
         <TableBody>
-          {tableData.map((prop, key) => {
+          {tableData.map((row, key) => {
             return (
               <TableRow key={key} className={classes.tableBodyRow}>
-                {prop.map((prop, key) => {
+                {row.map((column, key) => {
                   return (
                     <TableCell className={classes.tableCell} key={key}>
-                      {key === 4 && prop === false ? (
+                      {key === 4 && column === false ? (
                         <Button
-                          fullWidth
                           color="primary"
-                          variant="contained"
-                          onClick={this.handleSubmit}
+                          variant="transparent"
+                          onClick={onCancel(row[0])}
                         >
                           <CloseIcon />
-                          Cancel
                         </Button>
-                      ) : key === 4 && prop === true ? (
+                      ) : key === 4 && column === true ? (
                         "Cancelled"
+                      ) : key === 1 && typeof column === "string" ? (
+                        <a href="#">{column}</a>
                       ) : (
-                        prop
+                        column
                       )}
                     </TableCell>
                   );
@@ -73,6 +73,7 @@ CustomTable.defaultProps = {
 };
 
 CustomTable.propTypes = {
+  onCancel: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
   tableHeaderColor: PropTypes.oneOf([
     "warning",

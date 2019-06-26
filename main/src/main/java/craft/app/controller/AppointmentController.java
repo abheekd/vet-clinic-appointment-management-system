@@ -81,20 +81,6 @@ public class AppointmentController {
         return appointmentDetailsRepository.findAllByOrderByIdAsc();
     }
 
-    @GetMapping("current")
-    public Set<AppointmentDetails> listCurrentAppointments(@RequestParam(name = "timeZone", required = false) String timeZone) {
-        ZoneId zoneId = ZoneId.of("+00:00");
-        if (timeZone != null) {
-            zoneId = ZoneId.of(timeZone);
-        }
-
-        ZonedDateTime startDate = ZonedDateTime.from(Instant.now()
-                                                            .atZone(zoneId)
-                                                            .truncatedTo(ChronoUnit.DAYS));
-        ZonedDateTime endDate = startDate.plusHours(24);
-        return appointmentDetailsRepository.findAllByScheduledAndStartBetweenOrderByIdAsc(true, startDate, endDate);
-    }
-
     @GetMapping(value = "{id}")
     public AppointmentDetails getAppointmentById(@PathVariable("id") Integer id) {
         Optional<AppointmentDetails> appointment = appointmentDetailsRepository.findById(id);
@@ -129,7 +115,8 @@ public class AppointmentController {
             Optional<AppointmentDetails> optionalAppointmentDetails = appointmentDetailsRepository.findById(savedAppointment.getId());
             if (optionalAppointmentDetails.isPresent()) {
                 response = optionalAppointmentDetails.get();
-                updateIntervalSearchTree(vetId, appointmentStart, appointmentEnd);
+
+                initializeDaliyIntervalSearchTrees();
             }
         }
         return response;
@@ -183,13 +170,10 @@ public class AppointmentController {
     }
 
     private boolean isValidateAppointmentSlot(Integer vetId, ZonedDateTime appointmentStart, ZonedDateTime appointmentEnd) {
-        Duration requestedAppointmentDuration = Duration.between(appointmentStart, appointmentEnd);
 
         boolean isValid = validateAppointmentHourOfDay(appointmentStart, appointmentEnd);
         isValid = isValid && validateAppointmentDayOfWeek(appointmentStart);
         isValid = isValid && validateAppointmentOverlap(vetId, appointmentStart, appointmentEnd);
-
-        //isValid = isValid && validateAppointmentDuration(requestedAppointmentDuration);
         return isValid;
     }
 
