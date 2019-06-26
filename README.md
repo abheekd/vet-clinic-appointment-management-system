@@ -1,7 +1,13 @@
 # Instructions
-Build a web application to allow adding a pet, adding a vet, scheduling an appointment for a pet, 
-and displaying a list of appointments for a pet or a vet.
+Build a web application to allow:
+1. Adding a pet, 
+2. Adding a vet, 
+3. Scheduling an appointment for a pet,
+4. Cancellation of an appointment,
+4. Displaying a list of appointments for a pet,
+4. Displaying a list of appointments for a vet.
  
+## Conditions
 1. Two pets cannot schedule for the same vet at the same time.
 2. Vets are available M-F 8am-5pm
 3. Allow to cancel an appointment
