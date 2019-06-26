@@ -3,7 +3,7 @@ Build a web application to allow:
 1. Adding a pet - DONE (FE, BE)
 2. Adding a vet - DONE (FE, BE)
 3. Scheduling an appointment for a pet - DONE (FE, BE)
-4. Cancellation of an appointment,
+4. Cancellation of an appointment - DONE (FE, BE)
 4. Displaying a list of appointments for a pet,
 4. Displaying a list of appointments for a vet.
  
