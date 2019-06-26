@@ -28,7 +28,7 @@ public class ValidatorUtils {
     public static boolean validateAppointmentDayOfWeek(ZonedDateTime appointmentStart) {
         DayOfWeek dayOfWeek = appointmentStart.getDayOfWeek();
         if (dayOfWeek.equals(DayOfWeek.SATURDAY) || dayOfWeek.equals(DayOfWeek.SUNDAY)) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bookings on SATURDAY oor SUNDAY is not allowed.");
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bookings are allowed only between Monday and Friday.");
         } else {
             return true;
         }

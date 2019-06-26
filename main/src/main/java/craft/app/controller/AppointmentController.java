@@ -35,7 +35,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static craft.app.utils.ValidatorUtils.validateAppointmentDayOfWeek;
-import static craft.app.utils.ValidatorUtils.validateAppointmentDuration;
 import static craft.app.utils.ValidatorUtils.validateAppointmentHourOfDay;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -66,8 +65,7 @@ public class AppointmentController {
     //@Scheduled(cron = "0 0/1 * 1/1 * ? *")
     @Scheduled(fixedDelay = 60000)
     private void initializeDaliyIntervalSearchTrees() {
-        Set<Appointment> allAppointments = appointmentRepository.findAllByScheduledAndCompletedOrderByIdAsc(true,
-                                                                                                            false);
+        Set<Appointment> allAppointments = appointmentRepository.findAllByCancelledOrderByIdAsc(false);
         allAppointments.forEach(appointment -> {
             Integer       vetId                = appointment.getVetId();
             ZonedDateTime appointmentStartDate = appointment.getStart();
@@ -113,7 +111,7 @@ public class AppointmentController {
         appointmentStart = appointmentStart.withZoneSameInstant(ZoneId.of(appointment.getTimeZone()));
 
 
-        ZonedDateTime appointmentEnd   = appointment.getEnd();
+        ZonedDateTime appointmentEnd = appointment.getEnd();
         appointmentEnd = appointmentEnd.withZoneSameInstant(ZoneId.of(appointment.getTimeZone()));
 
         validateVet(appointment);

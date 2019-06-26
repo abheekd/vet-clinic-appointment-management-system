@@ -60,15 +60,6 @@ class Appointments extends React.Component {
         });
       })
       .catch(error => console.error(error));
-
-    getData("http://localhost:8080/api/v1/appointment/current")
-      .then(response => processAppointments(response))
-      .then(currentAppointments => {
-        this.setState({
-          currentAppointments: currentAppointments
-        });
-      })
-      .catch(error => console.error(error));
   };
 
   render() {
@@ -79,30 +70,12 @@ class Appointments extends React.Component {
           <GridItem xs={12} sm={12} md={12}>
             <Card>
               <CardHeader color="primary">
-                <h4 className={this.props.cardTitleWhite}>
-                  Today's Appointments
-                </h4>
-              </CardHeader>
-              <CardBody>
-                <Table
-                  tableHeaderColor="primary"
-                  tableHead={["#", "Pet", "Vet", "Appointment Slot"]}
-                  tableData={this.state.currentAppointments}
-                />
-              </CardBody>
-            </Card>
-          </GridItem>
-        </GridContainer>
-        <GridContainer>
-          <GridItem xs={12} sm={12} md={12}>
-            <Card>
-              <CardHeader color="primary">
                 <h4 className={this.props.cardTitleWhite}>All Appointments</h4>
               </CardHeader>
               <CardBody>
                 <Table
                   tableHeaderColor="primary"
-                  tableHead={["#", "Pet", "Vet", "Appointment Slot"]}
+                  tableHead={["#", "Pet", "Vet", "Appointment Slot", "Status"]}
                   tableData={this.state.allAppointments}
                 />
               </CardBody>

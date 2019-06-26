@@ -8,7 +8,10 @@ import TableRow from "@material-ui/core/TableRow";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 // core components
+import Button from "components/CustomButtons/Button.jsx";
 import tableStyle from "assets/jss/material-dashboard-react/components/tableStyle.jsx";
+
+import CloseIcon from "@material-ui/icons/Close";
 
 function CustomTable({ ...props }) {
   const { classes, tableHead, tableData, tableHeaderColor } = props;
@@ -38,7 +41,21 @@ function CustomTable({ ...props }) {
                 {prop.map((prop, key) => {
                   return (
                     <TableCell className={classes.tableCell} key={key}>
-                      {prop}
+                      {key === 4 && prop === false ? (
+                        <Button
+                          fullWidth
+                          color="primary"
+                          variant="contained"
+                          onClick={this.handleSubmit}
+                        >
+                          <CloseIcon />
+                          Cancel
+                        </Button>
+                      ) : key === 4 && prop === true ? (
+                        "Cancelled"
+                      ) : (
+                        prop
+                      )}
                     </TableCell>
                   );
                 })}
@@ -67,7 +84,7 @@ CustomTable.propTypes = {
     "gray"
   ]),
   tableHead: PropTypes.arrayOf(PropTypes.string),
-  tableData: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string))
+  tableData: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any))
 };
 
 export default withStyles(tableStyle)(CustomTable);

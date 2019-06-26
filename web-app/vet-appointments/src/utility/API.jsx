@@ -20,3 +20,12 @@ export const getData = (url = "") => {
     return response.json();
   }); // parses JSON response into native JavaScript objects
 };
+
+export const deleteData = (url = "") => {
+  // Default options are marked with *
+  return fetch(url, {
+    method: "DELETE"
+  }).then(response => {
+    return response.json();
+  }); // parses JSON response into native JavaScript objects
+};

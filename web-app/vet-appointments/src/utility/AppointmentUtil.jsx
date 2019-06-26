@@ -8,7 +8,8 @@ export const processAppointments = data => {
       appointment.id.toString(),
       appointment.pet.name,
       appointment.vet.firstName + " " + appointment.vet.lastName,
-      start.toLocaleString() + " to " + end.toLocaleTimeString()
+      start.toLocaleString() + " to " + end.toLocaleTimeString(),
+      appointment.cancelled
     ]);
   });
   return appointments;
