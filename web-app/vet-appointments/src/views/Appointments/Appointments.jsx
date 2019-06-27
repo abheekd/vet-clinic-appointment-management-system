@@ -62,11 +62,12 @@ class Appointments extends React.Component {
       .catch(error => console.error(error));
   };
 
-  cancelAppointment = id => {
+  cancelAppointment = (id, event) => {
+    console.log(event);
     deleteData("http://localhost:8080/api/v1/appointment/" + id).then(() =>
       this.loadComponent()
     );
-  }
+  };
 
   render() {
     return (
@@ -80,9 +81,9 @@ class Appointments extends React.Component {
               </CardHeader>
               <CardBody>
                 <Table
-                  onCancel={this.cancelAppointment}
+                  onRowButtonClick={this.cancelAppointment}
                   tableHeaderColor="primary"
-                  tableHead={["#", "Pet", "Vet", "Appointment Slot", "Status"]}
+                  tableHead={["#", "Pet", "Vet", "Appointment Slot", "Cancel"]}
                   tableData={this.state.allAppointments}
                 />
               </CardBody>

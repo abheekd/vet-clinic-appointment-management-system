@@ -2,19 +2,33 @@ import React from "react";
 import PropTypes from "prop-types";
 // @material-ui/core components
 import withStyles from "@material-ui/core/styles/withStyles";
-import Table from "@material-ui/core/Table";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-// core components
-import Button from "components/CustomButtons/Button.jsx";
+import {
+  IconButton,
+  Table,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableCell
+} from "@material-ui/core";
 import tableStyle from "assets/jss/material-dashboard-react/components/tableStyle.jsx";
 
-import CloseIcon from "@material-ui/icons/Close";
+import DeleteIcon from "@material-ui/icons/Delete";
 
 function CustomTable({ ...props }) {
-  const { classes, onCancel, tableHead, tableData, tableHeaderColor } = props;
+  const {
+    classes,
+    onRowButtonClick,
+    tableHead,
+    tableData,
+    tableHeaderColor
+  } = props;
+
+  const onClick = key => {
+    if (typeof onRowButtonClick === "function") {
+      onRowButtonClick(key);
+    }
+  };
+
   return (
     <div className={classes.tableResponsive}>
       <Table className={classes.table}>
@@ -42,17 +56,15 @@ function CustomTable({ ...props }) {
                   return (
                     <TableCell className={classes.tableCell} key={key}>
                       {key === 4 && column === false ? (
-                        <Button
-                          color="primary"
-                          variant="transparent"
-                          onClick={onCancel(row[0])}
-                        >
-                          <CloseIcon />
-                        </Button>
+                        <IconButton onClick={() => onClick(row[0])}>
+                          <DeleteIcon />
+                        </IconButton>
                       ) : key === 4 && column === true ? (
-                        "Cancelled"
+                        <IconButton disabled={true}>
+                          <DeleteIcon color="disabled" />
+                        </IconButton>
                       ) : key === 1 && typeof column === "string" ? (
-                        <a href="#">{column}</a>
+                        <a href="appointments">{column}</a>
                       ) : (
                         column
                       )}
@@ -73,7 +85,7 @@ CustomTable.defaultProps = {
 };
 
 CustomTable.propTypes = {
-  onCancel: PropTypes.func.isRequired,
+  onRowButtonClick: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
   tableHeaderColor: PropTypes.oneOf([
     "warning",

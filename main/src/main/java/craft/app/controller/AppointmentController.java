@@ -13,26 +13,26 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
 import javax.annotation.PostConstruct;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static craft.app.utils.ValidatorUtils.validateAppointmentDayOfWeek;
 import static craft.app.utils.ValidatorUtils.validateAppointmentHourOfDay;
@@ -47,38 +47,44 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @AllArgsConstructor
 public class AppointmentController {
 
-    private PetRepository                petRepository;
-    private VetRepository                vetRepository;
-    private AppointmentRepository        appointmentRepository;
-    private AppointmentDetailsRepository appointmentDetailsRepository;
-
-    private Map<String, IntervalSearchTree> dailyAppointmentTreeMap;
+    private static final AtomicBoolean                   UPDATE_INPROGRESS = new AtomicBoolean(false);
+    private              PetRepository                   petRepository;
+    private              VetRepository                   vetRepository;
+    private              AppointmentRepository           appointmentRepository;
+    private              AppointmentDetailsRepository    appointmentDetailsRepository;
+    private              Map<String, IntervalSearchTree> dailyAppointmentTreeMap;
 
     @PostConstruct
     public void populateDailyAppointmentSearchTrees() {
+        UPDATE_INPROGRESS.getAndSet(true);
         initializeDaliyIntervalSearchTrees();
     }
 
     /**
      * Scheduled job to repopulate the IntervalSearchTrees
      */
-    //@Scheduled(cron = "0 0/1 * 1/1 * ? *")
     @Scheduled(fixedDelay = 60000)
-    private void initializeDaliyIntervalSearchTrees() {
-        Set<Appointment> allAppointments = appointmentRepository.findAllByCancelledOrderByIdAsc(false);
-        allAppointments.forEach(appointment -> {
-            Integer       vetId                = appointment.getVetId();
-            ZonedDateTime appointmentStartDate = appointment.getStart();
-            ZonedDateTime appointmentEndDate   = appointment.getEnd();
+    public void initializeDaliyIntervalSearchTrees() {
+        if (UPDATE_INPROGRESS.get()) {
+            Map<String, IntervalSearchTree> tempIntervalSearchTreeMap = new HashMap<>(dailyAppointmentTreeMap);
 
-            updateIntervalSearchTree(vetId, appointmentStartDate, appointmentEndDate);
-        });
-        log.info("dailyAppointmentTreeMap refreshed : {}", dailyAppointmentTreeMap);
+            dailyAppointmentTreeMap = new HashMap<>();
+            Set<Appointment> allAppointments = appointmentRepository.findAllByCancelledOrderByIdAsc(false);
+            allAppointments.forEach(appointment -> {
+                Integer       vetId                = appointment.getVetId();
+                ZonedDateTime appointmentStartDate = appointment.getStart();
+                ZonedDateTime appointmentEndDate   = appointment.getEnd();
+
+                updateIntervalSearchTree(vetId, appointmentStartDate, appointmentEndDate);
+            });
+            log.info("oldMap: {}, dailyAppointmentTreeMap: {}", tempIntervalSearchTreeMap, dailyAppointmentTreeMap);
+            UPDATE_INPROGRESS.getAndSet(false);
+        }
     }
 
     @GetMapping
     public Set<AppointmentDetails> listAllAppointments() {
-        return appointmentDetailsRepository.findAllByOrderByIdAsc();
+        return appointmentDetailsRepository.findAllByOrderByIdDesc();
     }
 
     @GetMapping(value = "{id}")
@@ -91,8 +97,11 @@ public class AppointmentController {
         return appointment.get();
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @PostMapping(consumes = {APPLICATION_JSON_VALUE})
     public AppointmentDetails createAppointment(@RequestBody Appointment appointment) {
+        UPDATE_INPROGRESS.getAndSet(true);
+
         ZonedDateTime appointmentStart = appointment.getStart();
         appointmentStart = appointmentStart.withZoneSameInstant(ZoneId.of(appointment.getTimeZone()));
 
@@ -122,8 +131,11 @@ public class AppointmentController {
         return response;
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @DeleteMapping(value = "{id}")
     public AppointmentDetails cancelAppointment(@PathVariable("id") Integer id) {
+        UPDATE_INPROGRESS.getAndSet(true);
+
         Optional<Appointment> optionalAppointments = appointmentRepository.findById(id);
 
         AppointmentDetails response = null;

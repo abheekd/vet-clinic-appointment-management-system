@@ -110,3 +110,7 @@ hs_err_pid*
 *.ipr
 *.iws
 *.iml
+craft-vet-appointment.ipr
+craft-vet-appointment.ipr
+craft-vet-appointment.iws
+web-app/vet-appointments/vet-appointments.code-workspace

@@ -1,5 +1,8 @@
 package craft.app.data.structure;
 
+import lombok.ToString;
+
+@ToString
 public class IntervalSearchTree {
 
     private IntervalNode root;
@@ -95,6 +98,7 @@ public class IntervalSearchTree {
         return intervalLeftSubtree != null && intervalLeftSubtree.maxEnd > start;
     }
 
+    @ToString
     private class IntervalNode {
         IntervalNode left;
         long         start;
